@@ -1,0 +1,11 @@
+Sarah (PM): Good morning everyone. Let's start with the API launch timeline.
+John (Engineering): We've finished core development but testing needs two more weeks.
+Sarah (PM): Okay, so we'll delay the API launch to April 20th. Everyone agreed?
+All: Agreed.
+Sarah (PM): John, can you complete all testing by April 15th?
+John (Engineering): Yes, I'll have it done by April 15th.
+Sarah (PM): Maya, please update the documentation by April 17th.
+Maya (Design): Sure, I'll get that done.
+Sarah (PM): We also decided to go with the freemium pricing model as discussed last week.
+John (Engineering): Should I set up the rate limiting for the free tier?
+Sarah (PM): Yes John, please implement rate limiting by April 18th.
