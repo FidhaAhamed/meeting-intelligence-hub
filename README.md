@@ -1,76 +1,101 @@
 # Meeting Intelligence Hub
 
 ## Overview
-The Meeting Intelligence Hub project aims to provide tools and insights to enhance meeting productivity through AI-driven analytics and features.
+An AI-powered platform that transforms meeting transcripts into actionable intelligence by automatically extracting decisions, action items, analyzing sentiment, and providing a conversational chatbot interface.
+
+## Key Features
+1. **Multi-Transcript Ingestion** - Upload .txt and .vtt files
+2. **Decision & Action Item Extraction** - Auto-parse key decisions and tasks
+3. **Contextual Chatbot** - Ask cross-meeting questions with citations
+4. **Sentiment Analysis** - Visual dashboard showing meeting tone and emotions
 
 ## Tech Stack
-- **Frontend:** React.js, Redux, Bootstrap
-- **Backend:** Node.js, Express.js
-- **Database:** MongoDB
-- **Deployment:** Kubernetes, Docker
-- **Monitoring:** Prometheus, Grafana
+- **Frontend:** React 19, Vite, Tailwind CSS, Axios
+- **Backend:** FastAPI (Python), SQLAlchemy ORM
+- **AI/LLM:** Anthropic Claude API & Groq
+- **Database:** PostgreSQL (configure via connection string)
 
-## Setup Instructions
-1. **Clone the repository:**  
-   ```bash
-   git clone https://github.com/<your_username>/meeting-intelligence-hub.git
-   cd meeting-intelligence-hub
-   ```
+## Quick Start
 
-2. **Install dependencies:**  
-   For the frontend:  
-   ```bash
-   cd frontend  
-   npm install
-   ```  
-   For the backend:  
-   ```bash
-   cd backend  
-   npm install
-   ```
+### Prerequisites
+- Python 3.9+
+- Node.js 18+
+- PostgreSQL running locally or remote
 
-3. **Environment Variables:**  
-   Create a `.env` file in the root of the backend directory and add the following:
-   ```plaintext
-   MONGODB_URI=<your_mongodb_uri>
-   JWT_SECRET=<your_jwt_secret>
-   PORT=5000
-   ```
+### Installation & Setup
 
-4. **Run the application:**  
-   For the backend:  
-   ```bash
-   cd backend  
-   npm start
-   ```  
-   For the frontend:  
-   ```bash
-   cd frontend  
-   npm start
-   ```
+#### Backend
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+#### Frontend
+```bash
+cd frontend
+npm install
+```
+#### Environment Configuration
+Create .env file in the backend/ directory:
 
-## Features
-- **Meeting Notes:** Capture and store notes during meetings.
-- **Action Items:** Create and track action items assigned during meetings.
-- **Analytics Dashboard:** View analytics on meeting metrics.
+```bash
+DATABASE_URL=postgresql://user:password@localhost/meeting_hub
+GROQ_API_KEY=your_groq_api_key
+```
+#### Running the Application
+Terminal 1 - Backend:
 
-## API Endpoints
-### Authentication
-- `POST /api/auth/register`: Register a new user  
-- `POST /api/auth/login`: Log in an existing user
+```bash
+cd backend
+uvicorn main:app --reload --port 8000
+```
+Terminal 2 - Frontend:
 
-### Meetings
-- `GET /api/meetings`: Get a list of meetings  
-- `POST /api/meetings`: Create a new meeting  
-- `GET /api/meetings/:id`: Get details of a specific meeting
+```bash
+cd frontend
+npm run dev
+```
+Visit: http://localhost:5173
 
-### Notes
-- `POST /api/meetings/:id/notes`: Add notes to a meeting  
-- `GET /api/meetings/:id/notes`: Get notes for a meeting
+#### Project Structure
+```bash
+meeting-intelligence-hub/
+├── backend/
+│   ├── main.py              # FastAPI app entry
+│   ├── models.py            # SQLAlchemy models
+│   ├── database.py          # DB connection
+│   ├── requirements.txt
+│   └── routers/
+│       ├── meetings.py      # Meeting CRUD
+│       ├── extract.py       # AI extraction logic
+│       ├── chat.py          # Chatbot endpoint
+│       └── sentiment.py     # Sentiment analysis
+└── frontend/
+    ├── src/
+    │   ├── App.jsx
+    │   ├── components/
+    │   │   ├── UploadPortal.jsx
+    │   │   ├── MeetingDetail.jsx
+    │   │   ├── ChatPanel.jsx
+    │   │   └── SentimentDashboard.jsx
+    │   └── pages/
+    │       ├── Dashboard.jsx
+    │       └── MeetingDetail.jsx
+    └── package.json
+```
 
-### Action Items
-- `POST /api/meetings/:id/action-items`: Create a new action item  
-- `GET /api/meetings/:id/action-items`: Get action items for a meeting
-
-## Contribution
-Contributions are welcome! Please submit a pull request or open an issue for any improvements or suggestions.
+### API Endpoints
+Meetings
+POST /api/meetings/upload - Upload transcript(s)
+GET /api/meetings - List all meetings
+GET /api/meetings/{id} - Get meeting details
+DELETE /api/meetings/{id} - Delete meeting
+Extraction
+GET /api/extract/{meeting_id}/decisions - Get decisions
+GET /api/extract/{meeting_id}/action-items - Get action items
+POST /api/extract/{meeting_id}/process - Trigger extraction
+Chat
+POST /api/chat/query - Ask questions across meetings with context
+Sentiment
+GET /api/sentiment/{meeting_id} - Get sentiment breakdown
