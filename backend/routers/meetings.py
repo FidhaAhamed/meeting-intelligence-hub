@@ -56,3 +56,12 @@ def get_meeting(meeting_id: int, db: Session = Depends(get_db)):
     if not meeting:
         raise HTTPException(404, "Meeting not found")
     return meeting
+
+@router.get("/search")
+def search_meetings(q: str = "", db: Session = Depends(get_db)):
+    query = db.query(Meeting)
+    if q:
+        query = query.filter(
+            Meeting.title.ilike(f"%{q}%")
+        )
+    return query.order_by(Meeting.created_at.desc()).all()

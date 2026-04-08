@@ -4,6 +4,8 @@ import { getMeetings } from '../api/meetings'
 import ExtractionPanel from '../components/ExtractionPanel'
 import ChatPanel from '../components/ChatPanel'
 import SentimentDashboard from '../components/SentimentDashboard'
+import SummaryCard from '../components/SummaryCard'
+
 
 function MeetingDetail() {
   const { id } = useParams()
@@ -35,6 +37,8 @@ function MeetingDetail() {
           <span>{new Date(meeting.created_at).toLocaleDateString()}</span>
         </div>
       </div>
+
+      <SummaryCard meetingId={parseInt(id)} />
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">

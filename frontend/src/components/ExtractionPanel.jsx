@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { extractFromMeeting, getExtractions } from '../api/meetings'
+import { extractFromMeeting, getExtractions, exportCSV, exportPDF } from '../api/meetings'
 
 function ExtractionPanel({ meetingId }) {
   const [data, setData] = useState({ decisions: [], action_items: [] })
@@ -22,7 +22,7 @@ function ExtractionPanel({ meetingId }) {
       setData(res.data)
       setExtracted(true)
     } catch (err) {
-      alert('Extraction failed. Check your Anthropic API key.')
+      alert('Extraction failed. Check your Groq API key.')
     } finally {
       setLoading(false)
     }
@@ -30,6 +30,8 @@ function ExtractionPanel({ meetingId }) {
 
   return (
     <div className="space-y-6">
+
+      {/* Not yet extracted */}
       {!extracted && (
         <div className="text-center py-10 bg-white border border-gray-200 rounded-xl">
           <div className="text-3xl mb-3">🤖</div>
@@ -44,19 +46,36 @@ function ExtractionPanel({ meetingId }) {
         </div>
       )}
 
+      {/* Extracted results */}
       {extracted && (
         <>
-          <div className="flex justify-end">
-            <button
-              onClick={handleExtract}
-              disabled={loading}
-              className="text-sm text-indigo-600 hover:underline disabled:opacity-50"
-            >
-              {loading ? 'Re-analysing...' : 'Re-analyse'}
-            </button>
+          {/* Toolbar */}
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-500">AI extracted results</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => exportCSV(meetingId)}
+                className="text-xs border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition"
+              >
+                Export CSV
+              </button>
+              <button
+                onClick={() => exportPDF(meetingId)}
+                className="text-xs border border-indigo-200 text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition"
+              >
+                Export PDF
+              </button>
+              <button
+                onClick={handleExtract}
+                disabled={loading}
+                className="text-xs text-indigo-600 hover:underline disabled:opacity-50"
+              >
+                {loading ? 'Re-analysing...' : 'Re-analyse'}
+              </button>
+            </div>
           </div>
 
-          {/* Decisions */}
+          {/* Decisions table */}
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
@@ -71,13 +90,29 @@ function ExtractionPanel({ meetingId }) {
                   <tr>
                     <th className="text-left px-5 py-3">#</th>
                     <th className="text-left px-5 py-3">Decision</th>
+                    <th className="text-left px-5 py-3">Confidence</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {data.decisions.map((d, i) => (
                     <tr key={i} className="hover:bg-gray-50">
                       <td className="px-5 py-3 text-gray-400">{i + 1}</td>
-                      <td className="px-5 py-3 text-gray-700">{d.description}</td>
+                      <td className="px-5 py-3 text-gray-700">
+                        {d.description}
+                        {d.evidence && (
+                          <p className="text-xs text-gray-400 mt-0.5 italic">"{d.evidence}"</p>
+                        )}
+                      </td>
+                      <td className="px-5 py-3">
+                        {d.confidence && (
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium
+                            ${d.confidence >= 0.8 ? 'bg-green-100 text-green-700' :
+                              d.confidence >= 0.5 ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-red-100 text-red-700'}`}>
+                            {Math.round(d.confidence * 100)}%
+                          </span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -85,7 +120,7 @@ function ExtractionPanel({ meetingId }) {
             )}
           </div>
 
-          {/* Action Items */}
+          {/* Action items table */}
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block"></span>
@@ -101,6 +136,7 @@ function ExtractionPanel({ meetingId }) {
                     <th className="text-left px-5 py-3">Owner</th>
                     <th className="text-left px-5 py-3">Task</th>
                     <th className="text-left px-5 py-3">Due</th>
+                    <th className="text-left px-5 py-3">Confidence</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -111,8 +147,23 @@ function ExtractionPanel({ meetingId }) {
                           {a.owner}
                         </span>
                       </td>
-                      <td className="px-5 py-3 text-gray-700">{a.task}</td>
-                      <td className="px-5 py-3 text-gray-400">{a.due_date}</td>
+                      <td className="px-5 py-3 text-gray-700">
+                        {a.task}
+                        {a.evidence && (
+                          <p className="text-xs text-gray-400 mt-0.5 italic">"{a.evidence}"</p>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-gray-400 text-xs">{a.due_date}</td>
+                      <td className="px-5 py-3">
+                        {a.confidence && (
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium
+                            ${a.confidence >= 0.8 ? 'bg-green-100 text-green-700' :
+                              a.confidence >= 0.5 ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-red-100 text-red-700'}`}>
+                            {Math.round(a.confidence * 100)}%
+                          </span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
