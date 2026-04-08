@@ -87,15 +87,15 @@ meeting-intelligence-hub/
 
 ### API Endpoints
 Meetings
-POST /api/meetings/upload - Upload transcript(s)
-GET /api/meetings - List all meetings
-GET /api/meetings/{id} - Get meeting details
-DELETE /api/meetings/{id} - Delete meeting
+- POST /api/meetings/upload - Upload transcript(s)
+- GET /api/meetings - List all meetings
+- GET /api/meetings/{id} - Get meeting details
+- DELETE /api/meetings/{id} - Delete meeting
 Extraction
-GET /api/extract/{meeting_id}/decisions - Get decisions
-GET /api/extract/{meeting_id}/action-items - Get action items
-POST /api/extract/{meeting_id}/process - Trigger extraction
+- GET /api/extract/{meeting_id}/decisions - Get decisions
+- GET /api/extract/{meeting_id}/action-items - Get action items
+- POST /api/extract/{meeting_id}/process - Trigger extraction
 Chat
-POST /api/chat/query - Ask questions across meetings with context
+- POST /api/chat/query - Ask questions across meetings with context
 Sentiment
-GET /api/sentiment/{meeting_id} - Get sentiment breakdown
+- GET /api/sentiment/{meeting_id} - Get sentiment breakdown
