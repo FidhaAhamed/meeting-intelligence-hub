@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import UploadZone from '../components/UploadZone'
-import { getMeetings, searchMeetings } from '../api/meetings'
+import { deleteMeeting, getMeetings, searchMeetings } from '../api/meetings'
 
 function StatCard({ label, value, sub, loading }) {
   if (loading) return (
@@ -36,8 +36,17 @@ function MeetingCardSkeleton() {
   )
 }
 
-function MeetingCard({ meeting }) {
+function MeetingCard({ meeting, deletingId, onDelete }) {
   const navigate = useNavigate()
+  const isDeleting = deletingId === meeting.id
+
+  const handleDelete = async (event) => {
+    event.stopPropagation()
+    const confirmed = window.confirm(`Remove "${meeting.title}" from the dashboard? This also deletes the uploaded transcript file.`)
+    if (!confirmed) return
+    await onDelete(meeting)
+  }
+
   return (
     <div
       onClick={() => navigate(`/meeting/${meeting.id}`)}
@@ -47,9 +56,20 @@ function MeetingCard({ meeting }) {
         <h3 className="font-medium text-gray-900 group-hover:text-indigo-600 transition truncate">
           {meeting.title}
         </h3>
-        <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full ml-2 shrink-0">
-          {meeting.file_name.split('.').pop().toUpperCase()}
-        </span>
+        <div className="ml-2 flex items-center gap-2 shrink-0">
+          <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">
+            {meeting.file_name.split('.').pop().toUpperCase()}
+          </span>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="text-xs text-gray-400 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            aria-label={`Delete ${meeting.title}`}
+          >
+            {isDeleting ? 'Removing...' : '✕'}
+          </button>
+        </div>
       </div>
       <div className="flex gap-4 text-xs text-gray-400">
         <span>{meeting.word_count.toLocaleString()} words</span>
@@ -69,6 +89,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [showUpload, setShowUpload] = useState(false)
   const [search, setSearch] = useState('')
+  const [deletingId, setDeletingId] = useState(null)
 
   const fetchMeetings = async () => {
     setLoading(true)
@@ -100,6 +121,20 @@ export default function Dashboard() {
       setFiltered(res.data)
     } catch {
       setFiltered(meetings.filter(m => m.title.toLowerCase().includes(val.toLowerCase())))
+    }
+  }
+
+  const handleDeleteMeeting = async (meeting) => {
+    setDeletingId(meeting.id)
+    try {
+      await deleteMeeting(meeting.id)
+      setMeetings(current => current.filter(item => item.id !== meeting.id))
+      setFiltered(current => current.filter(item => item.id !== meeting.id))
+    } catch (err) {
+      console.error(err)
+      window.alert('Could not delete this meeting. Please try again.')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -162,7 +197,14 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map(m => <MeetingCard key={m.id} meeting={m} />)}
+          {filtered.map(m => (
+            <MeetingCard
+              key={m.id}
+              meeting={m}
+              deletingId={deletingId}
+              onDelete={handleDeleteMeeting}
+            />
+          ))}
         </div>
       )}
     </div>

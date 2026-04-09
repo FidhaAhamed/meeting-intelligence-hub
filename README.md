@@ -1,107 +1,316 @@
 # Meeting Intelligence Hub
 
-## Overview
-An AI-powered platform that transforms meeting transcripts into actionable intelligence by automatically extracting decisions, action items, analyzing sentiment, and providing a conversational chatbot interface.
+An AI-powered meeting analysis platform that transforms raw transcripts into structured insights — decisions, action items, sentiment analysis, and a smart chatbot — all powered by Groq AI and a RAG pipeline.
 
-## Key Features
-1. **Multi-Transcript Ingestion** - Upload .txt and .vtt files
-2. **Decision & Action Item Extraction** - Auto-parse key decisions and tasks
-3. **Contextual Chatbot** - Ask cross-meeting questions with citations
-4. **Sentiment Analysis** - Visual dashboard showing meeting tone and emotions
+---
+
+## Features
+
+- **Upload transcripts** — drag and drop `.txt` or `.vtt` files
+- **AI extraction** — automatically pulls out decisions and action items with confidence scores
+- **RAG chatbot** — ask questions across your transcripts using vector similarity search
+- **Sentiment analysis** — per-speaker tone breakdown and conversation timeline
+- **Meeting summary** — auto-generated TL;DR with key topics and meeting type
+- **Export** — download decisions and action items as CSV or PDF
+
+---
 
 ## Tech Stack
-- **Frontend:** React 19, Vite, Tailwind CSS, Axios
-- **Backend:** FastAPI (Python), SQLAlchemy ORM
-- **AI/LLM:** Anthropic Claude API & Groq
-- **Database:** PostgreSQL (configure via connection string)
 
-## Quick Start
+| Layer | Technology |
+|---|---|
+| Frontend | React + Vite + TailwindCSS |
+| Backend | FastAPI (Python) |
+| Database | PostgreSQL via Supabase + pgvector |
+| AI / LLM | Groq API (LLaMA 3.3 70B) |
+| Embeddings | sentence-transformers (all-MiniLM-L6-v2) |
+| PDF Export | ReportLab |
 
-### Prerequisites
-- Python 3.9+
-- Node.js 18+
-- PostgreSQL running locally or remote
+---
 
-### Installation & Setup
+## Prerequisites
 
-#### Backend
+Make sure you have these installed before starting:
+
+- [Node.js](https://nodejs.org/) v18 or above
+- [Python](https://www.python.org/) 3.9 or above
+- A free [Supabase](https://supabase.com) account
+- A free [Groq](https://console.groq.com) API key
+
+---
+
+## Project Structure
+
+```
+meeting-intelligence-hub/
+├── frontend/                  # React app
+│   ├── src/
+│   │   ├── api/
+│   │   │   └── meetings.js    # All API calls
+│   │   ├── components/
+│   │   │   ├── ChatPanel.jsx
+│   │   │   ├── ExtractionPanel.jsx
+│   │   │   ├── SentimentDashboard.jsx
+│   │   │   ├── SummaryCard.jsx
+│   │   │   └── UploadZone.jsx
+│   │   ├── pages/
+│   │   │   ├── Dashboard.jsx
+│   │   │   └── MeetingDetail.jsx
+│   │   └── App.jsx
+│   └── package.json
+│
+├── backend/                   # FastAPI app
+│   ├── routers/
+│   │   ├── meetings.py        # Upload + fetch meetings
+│   │   ├── extract.py         # AI extraction + export
+│   │   ├── chat.py            # Basic chatbot
+│   │   ├── rag.py             # RAG pipeline
+│   │   └── sentiment.py       # Sentiment analysis
+│   ├── services/
+│   │   └── embedder.py        # Chunking + embedding logic
+│   ├── database.py
+│   ├── models.py
+│   ├── main.py
+│   ├── .env                   # Your secrets (never commit this)
+│   └── requirements.txt
+│
+└── README.md
+```
+
+---
+
+## Setup Guide
+
+### Step 1 — Clone the repository
+
+```bash
+git clone https://github.com/YOUR_USERNAME/meeting-intelligence-hub.git
+cd meeting-intelligence-hub
+```
+
+---
+
+### Step 2 — Set up Supabase database
+
+1. Go to [supabase.com](https://supabase.com) and create a free account
+2. Click **New Project**, name it `meeting-hub`, set a strong password
+3. Wait ~2 minutes for provisioning
+4. Go to **Settings → Database → Connection String → URI tab**
+5. Copy the connection string — it looks like:
+   ```
+   postgresql://postgres:YOUR_PASSWORD@db.xxxxxxxxxxxx.supabase.co:5432/postgres
+   ```
+6. Go to **SQL Editor** and run this to enable vector search:
+   ```sql
+   create extension if not exists vector;
+   ```
+
+---
+
+### Step 3 — Get your Groq API key
+
+1. Go to [console.groq.com](https://console.groq.com) and sign up free (no card needed)
+2. Click **API Keys → Create API Key**
+3. Copy the key — it starts with `gsk_`
+
+---
+
+### Step 4 — Set up the backend
+
 ```bash
 cd backend
+
+# Create and activate virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# On Windows:
+venv\Scripts\activate
+
+# On Mac/Linux:
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
-#### Frontend
+
+If `requirements.txt` is missing, install manually:
+
+```bash
+pip install fastapi uvicorn sqlalchemy psycopg2-binary python-dotenv \
+            groq sentence-transformers pgvector python-multipart \
+            aiofiles reportlab
+pip freeze > requirements.txt
+```
+
+---
+
+### Step 5 — Configure environment variables
+
+Create a `.env` file inside the `backend/` folder:
+
+```bash
+# backend/.env
+
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.xxxxxxxxxxxx.supabase.co:5432/postgres
+GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+Replace the values with your actual Supabase connection string and Groq API key.
+
+> Never commit your `.env` file. Make sure `.env` is in your `.gitignore`.
+
+---
+
+### Step 6 — Run the backend
+
+```bash
+# Make sure you are inside the backend/ folder with venv activated
+uvicorn main:app --reload
+```
+
+You should see:
+
+```
+INFO:     Uvicorn running on http://127.0.0.1:8000
+INFO:     Application startup complete.
+```
+
+Open [http://localhost:8000/docs](http://localhost:8000/docs) to see the auto-generated API documentation.
+
+> The first time you run the backend, SQLAlchemy will automatically create all database tables in Supabase.
+
+---
+
+### Step 7 — Set up the frontend
+
+Open a new terminal window:
+
 ```bash
 cd frontend
+
+# Install dependencies
 npm install
-```
-#### Environment Configuration
-Create .env file in the backend/ directory:
 
-```bash
-DATABASE_URL=postgresql://user:password@localhost/meeting_hub
-GROQ_API_KEY=your_groq_api_key
-```
-#### Running the Application
-Terminal 1 - Backend:
-
-```bash
-cd backend
-uvicorn main:app --reload --port 8000
-```
-Terminal 2 - Frontend:
-
-```bash
-cd frontend
+# Start the development server
 npm run dev
 ```
-Visit: http://localhost:5173
 
-#### Project Structure
-```bash
-meeting-intelligence-hub/
-├── backend/
-│   ├── main.py              # FastAPI app entry
-│   ├── models.py            # SQLAlchemy models
-│   ├── database.py          # DB connection
-│   ├── requirements.txt
-│   └── routers/
-│       ├── meetings.py      # Meeting CRUD
-│       ├── extract.py       # AI extraction logic
-│       ├── chat.py          # Chatbot endpoint
-│       └── sentiment.py     # Sentiment analysis
-└── frontend/
-    ├── src/
-    │   ├── App.jsx
-    │   ├── components/
-    │   │   ├── UploadPortal.jsx
-    │   │   ├── MeetingDetail.jsx
-    │   │   ├── ChatPanel.jsx
-    │   │   └── SentimentDashboard.jsx
-    │   └── pages/
-    │       ├── Dashboard.jsx
-    │       └── MeetingDetail.jsx
-    └── package.json
+You should see:
+
+```
+  VITE v5.x.x  ready in xxx ms
+  ➜  Local:   http://localhost:5173/
 ```
 
-### API Endpoints
-Meetings
-- POST /api/meetings/upload - Upload transcript(s)
-- GET /api/meetings - List all meetings
-- GET /api/meetings/{id} - Get meeting details
-- DELETE /api/meetings/{id} - Delete meeting
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-Extraction
+---
 
-- GET /api/extract/{meeting_id}/decisions - Get decisions
-- GET /api/extract/{meeting_id}/action-items - Get action items
-- POST /api/extract/{meeting_id}/process - Trigger extraction
+## Using the App
 
-Chat
+### Upload a transcript
 
-- POST /api/chat/query - Ask questions across meetings with context
+1. Click **Upload Transcript** on the dashboard
+2. Drag and drop a `.txt` or `.vtt` file
+3. The meeting card appears once uploaded
 
-Sentiment
+### Sample transcript to test with
 
-- GET /api/sentiment/{meeting_id} - Get sentiment breakdown
+Create a file called `product-meeting.txt` with this content:
+
+```
+Sarah (PM): Good morning everyone. Let's align on the API launch.
+John (Engineering): Testing needs two more weeks minimum.
+Sarah (PM): Okay, we're delaying the API launch to April 20th. Everyone agreed?
+All: Agreed.
+Sarah (PM): John, complete all testing by April 15th please.
+John (Engineering): Done, I'll have it ready.
+Sarah (PM): Maya, update the docs by April 17th.
+Maya (Design): Sure, will do.
+Sarah (PM): We're also going with the freemium pricing model — final decision.
+John (Engineering): I'll implement rate limiting for the free tier by April 18th.
+```
+
+### Extract decisions and action items
+
+1. Click a meeting card
+2. Go to the **Decisions & Actions** tab
+3. Click **Extract Decisions & Action Items**
+4. View results with confidence scores and export as CSV or PDF
+
+### Use the AI chatbot (RAG)
+
+1. Click a meeting card
+2. Go to the **Ask AI** tab
+3. Click **Index transcript** — this chunks and embeds the transcript
+4. Ask questions like:
+   - "What decisions were made?"
+   - "Who is responsible for testing?"
+   - "What is the launch date?"
+
+### Run sentiment analysis
+
+1. Click a meeting card
+2. Go to the **Sentiment** tab
+3. Click **Run Sentiment Analysis**
+4. View per-speaker tone, overall score, and colour-coded timeline
+
+---
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/meetings/` | List all meetings |
+| `POST` | `/meetings/upload` | Upload transcript files |
+| `POST` | `/extract/{id}` | Extract decisions and action items |
+| `GET` | `/extract/{id}` | Get cached extractions |
+| `POST` | `/extract/summary/{id}` | Generate meeting TL;DR |
+| `GET` | `/extract/export/{id}/csv` | Download as CSV |
+| `GET` | `/extract/export/{id}/pdf` | Download as PDF |
+| `POST` | `/rag/index/{id}` | Chunk and embed transcript |
+| `POST` | `/rag/query` | Ask a question via RAG |
+| `GET` | `/rag/status/{id}` | Check if transcript is indexed |
+| `POST` | `/sentiment/{id}` | Run sentiment analysis |
+| `POST` | `/chat/` | Basic chatbot query |
+
+---
+
+## Common Errors
+
+**`ModuleNotFoundError: No module named 'groq'`**
+Your virtual environment is not activated. Run `venv\Scripts\activate` (Windows) or `source venv/bin/activate` (Mac/Linux) before starting the server.
+
+**`Error loading ASGI app. Attribute "app" not found`**
+Make sure you are running `uvicorn main:app --reload` from inside the `backend/` folder, not the root.
+
+**`SSL connection error` on Supabase**
+Make sure `connect_args={"sslmode": "require"}` is set in `database.py`.
+
+**`sentence_transformers` takes long on first run**
+The embedding model (`all-MiniLM-L6-v2`, ~80MB) downloads automatically on first use. This is a one-time download.
+
+---
+
+## Environment Variables Reference
+
+| Variable | Description | Where to get it |
+|---|---|---|
+| `DATABASE_URL` | Supabase PostgreSQL connection string | Supabase → Settings → Database |
+| `GROQ_API_KEY` | Groq API key for LLM calls | console.groq.com |
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m 'feat: add your feature'`
+4. Push to the branch: `git push origin feature/your-feature`
+5. Open a Pull Request
+
+---
+
+## License
+
+MIT License — feel free to use this project for learning and portfolio purposes.

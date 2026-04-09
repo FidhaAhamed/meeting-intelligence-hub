@@ -15,8 +15,8 @@ class Meeting(Base):
     speaker_count = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
-    action_items = relationship("ActionItem", back_populates="meeting")
-    decisions = relationship("Decision", back_populates="meeting")
+    action_items = relationship("ActionItem", back_populates="meeting", cascade="all, delete-orphan")
+    decisions = relationship("Decision", back_populates="meeting", cascade="all, delete-orphan")
 
 
 class ActionItem(Base):

@@ -10,9 +10,36 @@ router = APIRouter(prefix="/meetings", tags=["meetings"])
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+COLLECTIVE_SPEAKER_LABELS = {
+    "all",
+    "everyone",
+    "everybody",
+    "team",
+    "group",
+    "audience",
+    "participants",
+}
+
+
+def normalize_speaker_label(label: str) -> str:
+    # Drop role annotations such as "(PM)" so exclusions work consistently.
+    return re.sub(r"\s*\([^)]+\)", "", label).strip().lower()
+
+
 def parse_transcript(content: str):
     word_count = len(content.split())
-    speakers = set(re.findall(r'^([A-Z][a-zA-Z\s]+):', content, re.MULTILINE))
+    
+    # Match patterns like "Sarah (PM):", "John (Engineering):", "Maya:", "All:"
+    speakers = set(re.findall(r'^([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*(?:\s*\([^)]+\))?)\s*:', content, re.MULTILINE))
+    
+    # Filter out common false positives
+    excluded = {'note', 'update', 'action', 'decision', 'summary'}
+    speakers = {
+        s for s in speakers
+        if normalize_speaker_label(s) not in excluded
+        and normalize_speaker_label(s) not in COLLECTIVE_SPEAKER_LABELS
+    }
+    
     return word_count, len(speakers) if speakers else 1
 
 @router.post("/upload")
@@ -56,6 +83,22 @@ def get_meeting(meeting_id: int, db: Session = Depends(get_db)):
     if not meeting:
         raise HTTPException(404, "Meeting not found")
     return meeting
+
+
+@router.delete("/{meeting_id}")
+def delete_meeting(meeting_id: int, db: Session = Depends(get_db)):
+    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+    if not meeting:
+        raise HTTPException(404, "Meeting not found")
+
+    file_path = meeting.file_path
+    db.delete(meeting)
+    db.commit()
+
+    if file_path and os.path.exists(file_path):
+        os.remove(file_path)
+
+    return {"message": "Meeting deleted successfully", "id": meeting_id}
 
 @router.get("/search")
 def search_meetings(q: str = "", db: Session = Depends(get_db)):
