@@ -15,32 +15,39 @@ function MeetingDetail() {
 
   useEffect(() => {
     getMeetings().then(res => {
-      const found = res.data.find(m => m.id === parseInt(id))
+      const found = res.data.find(item => item.id === parseInt(id))
       if (!found) navigate('/')
       setMeeting(found)
     })
-  }, [id])
+  }, [id, navigate])
 
   if (!meeting) return <p className="text-gray-400">Loading...</p>
 
   return (
     <div>
       <button onClick={() => navigate('/')} className="text-sm text-gray-400 hover:text-gray-600 mb-6 flex items-center gap-1">
-        ← Back to dashboard
+        {'<-'} Back to dashboard
       </button>
 
       <div className="mb-6">
+        <div className="flex items-center gap-2 flex-wrap mb-2">
+          {meeting.project_name && (
+            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{meeting.project_name}</span>
+          )}
+          {meeting.meeting_type && (
+            <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full capitalize">{meeting.meeting_type}</span>
+          )}
+        </div>
         <h2 className="text-2xl font-semibold text-gray-900">{meeting.title}</h2>
-        <div className="flex gap-4 mt-2 text-sm text-gray-400">
+        <div className="flex gap-4 mt-2 text-sm text-gray-400 flex-wrap">
           <span>{meeting.word_count.toLocaleString()} words</span>
           <span>{meeting.speaker_count} speakers</span>
-          <span>{new Date(meeting.created_at).toLocaleDateString()}</span>
+          <span>{new Date(meeting.meeting_date || meeting.created_at).toLocaleDateString()}</span>
         </div>
       </div>
 
       <SummaryCard meetingId={parseInt(id)} />
 
-      {/* Tabs */}
       <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
         <button
           onClick={() => setTab('extract')}

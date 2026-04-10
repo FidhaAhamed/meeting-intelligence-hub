@@ -1,26 +1,26 @@
-Sarah (PM): Good morning, everyone. Thanks for joining on short notice. We need to finalize the API launch plan and make sure the release is still realistic.
-John (Engineering): Core development is complete, but QA found a few issues in authentication and rate limiting. We can fix them, but we need about two more weeks for proper testing.
-Priya (QA): That is correct. The biggest risk is token refresh under heavy load. We saw intermittent failures in staging yesterday.
-Sarah (PM): Understood. If testing needs two more weeks, then we should move the launch from April 8th to April 20th. Does anyone disagree?
-All: No objections.
-Maya (Design): That works for me. We will need to update the onboarding screens and the pricing page to match the new rollout date.
-Sarah (PM): Okay, decision made. The API launch is delayed to April 20th.
-John (Engineering): If we keep that date, I can finish all blocking fixes and hand the build to QA by April 15th.
-Sarah (PM): Great. John, please complete testing support and engineering fixes by April 15th.
-John (Engineering): Yes, I will own that.
-Sarah (PM): Maya, please update the public documentation, onboarding flow, and release visuals by April 17th.
-Maya (Design): Sure. I can complete the docs and UI assets by April 17th, but I will need final copy from marketing by Monday.
-Ravi (Marketing): I can send the final copy by end of day Monday. We are also aligning the launch email and website banner.
-Sarah (PM): Perfect. Ravi, action item for you: final launch copy by Monday evening.
-Priya (QA): One more thing. We should not open the API publicly without rate limiting for the free tier. That could create abuse issues in the first week.
-John (Engineering): Agreed. I can implement rate limiting for free users by April 18th.
-Sarah (PM): Good. That is another action item. John will implement rate limiting by April 18th.
-Maya (Design): Are we still going with the freemium pricing model we discussed last week?
-Sarah (PM): Yes. Final decision: we are launching with a freemium pricing model, including limited requests on the free tier and full access on paid plans.
-Ravi (Marketing): That helps positioning. Customers responded better to freemium than to a free trial in the interviews.
-Priya (QA): I want to flag one concern. If we get a sudden spike from the webinar campaign, support may not be ready.
-Sarah (PM): Good point. Let us add a soft-launch monitor for the first 72 hours after release.
-John (Engineering): I can set up alerting dashboards and error notifications before launch.
-Sarah (PM): Please do that by April 19th.
-Ravi (Marketing): I am feeling better about the plan now. The delay is not ideal, but it is safer than rushing and damaging trust.
-Sarah (PM): Same here. Thanks, everyone. To recap: launch moves to April 20th, John owns engineering fixes and rate limiting, Maya owns docs and visuals, Ravi owns copy, and Priya will re-run regression once the new build is ready.
+Sarah (PM): Good morning, everyone. Thanks for joining on short notice. We need to finalize the API launch plan and make sure the release is still realistic.
+John (Engineering): Core development is complete, but QA found a few issues in authentication and rate limiting. We can fix them, but we need about two more weeks for proper testing.
+Priya (QA): That is correct. The biggest risk is token refresh under heavy load. We saw intermittent failures in staging yesterday.
+Sarah (PM): Understood. If testing needs two more weeks, then we should move the launch from April 8th to April 20th. Does anyone disagree?
+All: No objections.
+Maya (Design): That works for me. We will need to update the onboarding screens and the pricing page to match the new rollout date.
+Sarah (PM): Okay, decision made. The API launch is delayed to April 20th.
+John (Engineering): If we keep that date, I can finish all blocking fixes and hand the build to QA by April 15th.
+Sarah (PM): Great. John, please complete testing support and engineering fixes by April 15th.
+John (Engineering): Yes, I will own that.
+Sarah (PM): Maya, please update the public documentation, onboarding flow, and release visuals by April 17th.
+Maya (Design): Sure. I can complete the docs and UI assets by April 17th, but I will need final copy from marketing by Monday.
+Ravi (Marketing): I can send the final copy by end of day Monday. We are also aligning the launch email and website banner.
+Sarah (PM): Perfect. Ravi, action item for you: final launch copy by Monday evening.
+Priya (QA): One more thing. We should not open the API publicly without rate limiting for the free tier. That could create abuse issues in the first week.
+John (Engineering): Agreed. I can implement rate limiting for free users by April 18th.
+Sarah (PM): Good. That is another action item. John will implement rate limiting by April 18th.
+Maya (Design): Are we still going with the freemium pricing model we discussed last week?
+Sarah (PM): Yes. Final decision: we are launching with a freemium pricing model, including limited requests on the free tier and full access on paid plans.
+Ravi (Marketing): That helps positioning. Customers responded better to freemium than to a free trial in the interviews.
+Priya (QA): I want to flag one concern. If we get a sudden spike from the webinar campaign, support may not be ready.
+Sarah (PM): Good point. Let us add a soft-launch monitor for the first 72 hours after release.
+John (Engineering): I can set up alerting dashboards and error notifications before launch.
+Sarah (PM): Please do that by April 19th.
+Ravi (Marketing): I am feeling better about the plan now. The delay is not ideal, but it is safer than rushing and damaging trust.
+Sarah (PM): Same here. Thanks, everyone. To recap: launch moves to April 20th, John owns engineering fixes and rate limiting, Maya owns docs and visuals, Ravi owns copy, and Priya will re-run regression once the new build is ready.

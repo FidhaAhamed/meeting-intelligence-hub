@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Text, DateTime, ForeignKey
+from sqlalchemy import Column, String, Integer, Text, DateTime, ForeignKey, Float
 from sqlalchemy.orm import relationship
 from database import Base
 import datetime
@@ -8,15 +8,20 @@ class Meeting(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
+    project_name = Column(String, nullable=True)
     file_name = Column(String, nullable=False)
     file_path = Column(String, nullable=False)
     meeting_date = Column(DateTime, nullable=True)
+    meeting_type = Column(String, nullable=True)
+    sentiment_overall_score = Column(Float, nullable=True)
+    sentiment_overall_label = Column(String, nullable=True)
     word_count = Column(Integer, default=0)
     speaker_count = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     action_items = relationship("ActionItem", back_populates="meeting", cascade="all, delete-orphan")
     decisions = relationship("Decision", back_populates="meeting", cascade="all, delete-orphan")
+    rag_chunks = relationship("RAGChunk", back_populates="meeting", cascade="all, delete-orphan")
 
 
 class ActionItem(Base):
@@ -27,6 +32,9 @@ class ActionItem(Base):
     owner = Column(String)
     task = Column(Text)
     due_date = Column(String)
+    confidence = Column(Float, nullable=True)
+    evidence = Column(Text, nullable=True)
+    source_span = Column(String, nullable=True)
 
     meeting = relationship("Meeting", back_populates="action_items")
 
@@ -37,5 +45,28 @@ class Decision(Base):
     id = Column(Integer, primary_key=True, index=True)
     meeting_id = Column(Integer, ForeignKey("meetings.id"))
     description = Column(Text)
+    confidence = Column(Float, nullable=True)
+    evidence = Column(Text, nullable=True)
+    source_span = Column(String, nullable=True)
 
     meeting = relationship("Meeting", back_populates="decisions")
+
+
+class RAGChunk(Base):
+    __tablename__ = "rag_chunks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    meeting_id = Column(Integer, ForeignKey("meetings.id"), nullable=False, index=True)
+    chunk_index = Column(Integer, nullable=False)
+    content = Column(Text, nullable=False)
+    line_start = Column(Integer, nullable=False)
+    line_end = Column(Integer, nullable=False)
+    speaker_name = Column(String, nullable=True)
+    speaker_hint = Column(String, nullable=True)
+    timestamp_start = Column(String, nullable=True)
+    timestamp_end = Column(String, nullable=True)
+    embedding_json = Column(Text, nullable=True)
+    embedding_model = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    meeting = relationship("Meeting", back_populates="rag_chunks")

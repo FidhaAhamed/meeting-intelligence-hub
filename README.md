@@ -8,7 +8,7 @@ An AI-powered meeting analysis platform that transforms raw transcripts into str
 
 - **Upload transcripts** — drag and drop `.txt` or `.vtt` files
 - **AI extraction** — automatically pulls out decisions and action items with confidence scores
-- **RAG chatbot** — ask questions across your transcripts using vector similarity search
+- **RAG search** — ask questions across your transcripts using semantic vector search
 - **Sentiment analysis** — per-speaker tone breakdown and conversation timeline
 - **Meeting summary** — auto-generated TL;DR with key topics and meeting type
 - **Export** — download decisions and action items as CSV or PDF
@@ -21,7 +21,7 @@ An AI-powered meeting analysis platform that transforms raw transcripts into str
 |---|---|
 | Frontend | React + Vite + TailwindCSS |
 | Backend | FastAPI (Python) |
-| Database | PostgreSQL via Supabase + pgvector |
+| Database | PostgreSQL via Supabase |
 | AI / LLM | Groq API (LLaMA 3.3 70B) |
 | Embeddings | sentence-transformers (all-MiniLM-L6-v2) |
 | PDF Export | ReportLab |
@@ -50,29 +50,39 @@ meeting-intelligence-hub/
 │   │   ├── components/
 │   │   │   ├── ChatPanel.jsx
 │   │   │   ├── ExtractionPanel.jsx
+│   │   │   ├── MeetingCard.jsx
+│   │   │   ├── Navbar.jsx
 │   │   │   ├── SentimentDashboard.jsx
 │   │   │   ├── SummaryCard.jsx
 │   │   │   └── UploadZone.jsx
 │   │   ├── pages/
+│   │   │   ├── Analytics.jsx
+│   │   │   ├── AskAI.jsx
 │   │   │   ├── Dashboard.jsx
 │   │   │   └── MeetingDetail.jsx
-│   │   └── App.jsx
-│   └── package.json
+│   │   ├── assets/
+│   │   ├── App.jsx
+│   │   ├── App.css
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── package.json
+│   ├── vite.config.js
+│   └── README.md
 │
 ├── backend/                   # FastAPI app
 │   ├── routers/
-│   │   ├── meetings.py        # Upload + fetch meetings
-│   │   ├── extract.py         # AI extraction + export
+│   │   ├── __init__.py
 │   │   ├── chat.py            # Basic chatbot
+│   │   ├── extract.py         # AI extraction + export
+│   │   ├── meetings.py        # Upload + fetch meetings
 │   │   ├── rag.py             # RAG pipeline
 │   │   └── sentiment.py       # Sentiment analysis
-│   ├── services/
-│   │   └── embedder.py        # Chunking + embedding logic
+│   ├── uploads/               # Uploaded transcript files
 │   ├── database.py
 │   ├── models.py
 │   ├── main.py
-│   ├── .env                   # Your secrets (never commit this)
-│   └── requirements.txt
+│   ├── requirements.txt
+│   └── .env                   # Your secrets (never commit this)
 │
 └── README.md
 ```
@@ -99,10 +109,6 @@ cd meeting-intelligence-hub
 5. Copy the connection string — it looks like:
    ```
    postgresql://postgres:YOUR_PASSWORD@db.xxxxxxxxxxxx.supabase.co:5432/postgres
-   ```
-6. Go to **SQL Editor** and run this to enable vector search:
-   ```sql
-   create extension if not exists vector;
    ```
 
 ---
@@ -137,7 +143,7 @@ If `requirements.txt` is missing, install manually:
 
 ```bash
 pip install fastapi uvicorn sqlalchemy psycopg2-binary python-dotenv \
-            groq sentence-transformers pgvector python-multipart \
+            groq sentence-transformers python-multipart \
             aiofiles reportlab
 pip freeze > requirements.txt
 ```
@@ -238,7 +244,7 @@ John (Engineering): I'll implement rate limiting for the free tier by April 18th
 3. Click **Extract Decisions & Action Items**
 4. View results with confidence scores and export as CSV or PDF
 
-### Use the AI chatbot (RAG)
+### Search transcripts with AI (RAG)
 
 1. Click a meeting card
 2. Go to the **Ask AI** tab
@@ -272,7 +278,6 @@ John (Engineering): I'll implement rate limiting for the free tier by April 18th
 | `POST` | `/rag/query` | Ask a question via RAG |
 | `GET` | `/rag/status/{id}` | Check if transcript is indexed |
 | `POST` | `/sentiment/{id}` | Run sentiment analysis |
-| `POST` | `/chat/` | Basic chatbot query |
 
 ---
 

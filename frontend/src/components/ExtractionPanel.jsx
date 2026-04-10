@@ -35,13 +35,13 @@ function ExtractionPanel({ meetingId }) {
       {!extracted && (
         <div className="text-center py-10 bg-white border border-gray-200 rounded-xl">
           <div className="text-3xl mb-3">🤖</div>
-          <p className="text-gray-600 mb-4">Claude will analyse this transcript and extract key information</p>
+          <p className="text-gray-600 mb-4">Groq AI will analyze this transcript and extract key information</p>
           <button
             onClick={handleExtract}
             disabled={loading}
             className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
           >
-            {loading ? 'Analysing...' : 'Extract Decisions & Action Items'}
+            {loading ? 'Analyzing...' : 'Extract Decisions & Action Items'}
           </button>
         </div>
       )}
@@ -70,7 +70,7 @@ function ExtractionPanel({ meetingId }) {
                 disabled={loading}
                 className="text-xs text-indigo-600 hover:underline disabled:opacity-50"
               >
-                {loading ? 'Re-analysing...' : 'Re-analyse'}
+                {loading ? 'Re-analyzing...' : 'Re-analyze'}
               </button>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { uploadTranscript } from '../api/meetings'
 
 function UploadZone({ onUploadSuccess }) {
+  const [projectName, setProjectName] = useState('')
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState(null)
@@ -18,8 +19,12 @@ function UploadZone({ onUploadSuccess }) {
 
     try {
       const formData = new FormData()
+      if (projectName.trim()) {
+        formData.append('project_name', projectName.trim())
+      }
       acceptedFiles.forEach((file) => formData.append('files', file))
       await uploadTranscript(formData, setProgress)
+      setProjectName('')
       onUploadSuccess()
     } catch (err) {
       setError('Upload failed. Make sure the backend is running.')
@@ -37,6 +42,18 @@ function UploadZone({ onUploadSuccess }) {
 
   return (
     <div className="mb-8">
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Project Name</label>
+        <input
+          type="text"
+          value={projectName}
+          onChange={e => setProjectName(e.target.value)}
+          placeholder="Optional: Product Launch, Apollo, Q2 Planning..."
+          className="w-full max-w-md border border-gray-200 rounded-lg px-4 py-2 text-sm outline-none focus:border-indigo-400 transition"
+        />
+        <p className="text-xs text-gray-400 mt-1">If left blank, we will try to infer it from the file name.</p>
+      </div>
+
       <div
         {...getRootProps()}
         className={`border-2 border-dashed rounded-xl p-16 text-center cursor-pointer transition

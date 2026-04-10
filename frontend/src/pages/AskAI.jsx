@@ -47,7 +47,6 @@ function AskAI() {
             <span className="w-2 h-2 rounded-full bg-purple-500 inline-block"></span>
             <span className="text-sm font-medium text-gray-900">Global search</span>
           </div>
-          <span className="text-xs text-gray-400">Powered by Groq + RAG</span>
         </div>
 
         {/* Suggested questions */}
@@ -80,9 +79,21 @@ function AskAI() {
                   <div className="mt-2 pt-2 border-t border-gray-200 space-y-1">
                     <p className="text-xs text-gray-400">{msg.chunks_used} chunks searched</p>
                     {msg.sources.map((s, j) => (
-                      <div key={j} className="flex justify-between items-center">
-                        <span className="text-xs text-indigo-500">{s.meeting_title}</span>
-                        <span className="text-xs text-gray-400 ml-3">{(s.similarity_score * 100).toFixed(0)}% match</span>
+                      <div key={j} className="text-xs">
+                        <div className="flex justify-between items-center gap-3">
+                          <span className="text-indigo-500">{s.citation || `${s.meeting_title} · lines ${s.line_start}-${s.line_end}`}</span>
+                          <span className="text-gray-400">{(s.similarity_score * 100).toFixed(0)}% match</span>
+                        </div>
+                        {s.timestamp_start && s.timestamp_end && (
+                          <p className="text-gray-400 mt-0.5">{s.timestamp_start} - {s.timestamp_end}</p>
+                        )}
+                        {s.speaker_name && (
+                          <p className="text-gray-400 mt-0.5">Speaker: {s.speaker_name}</p>
+                        )}
+                        {!s.speaker_name && s.speaker_hint && (
+                          <p className="text-gray-400 mt-0.5">Speakers: {s.speaker_hint}</p>
+                        )}
+                        <p className="text-gray-400 mt-0.5">{s.snippet}</p>
                       </div>
                     ))}
                   </div>

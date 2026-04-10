@@ -9,11 +9,10 @@ export const uploadTranscript = (formData, onProgress) =>
   })
 
 export const getMeetings = () => API.get('/meetings')
+export const getDashboardStats = () => API.get('/meetings/stats')
 export const deleteMeeting = (id) => API.delete(`/meetings/${id}`)
 export const extractFromMeeting = (id) => API.post(`/extract/${id}`)
 export const getExtractions = (id) => API.get(`/extract/${id}`)
-export const askQuestion = (question, meetingId = null) =>
-  API.post('/chat/', { question, meeting_id: meetingId })
 export const analyseSentiment = (id) => API.post(`/sentiment/${id}`)
 export const getSummary = (id) => API.post(`/extract/summary/${id}`)
 export const exportCSV = (id) => window.open(`http://localhost:8000/extract/export/${id}/csv`)

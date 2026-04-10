@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import UploadZone from '../components/UploadZone'
-import { deleteMeeting, getMeetings, searchMeetings } from '../api/meetings'
+import { deleteMeeting, getDashboardStats, getMeetings, searchMeetings } from '../api/meetings'
+
+const DEFAULT_DASHBOARD_STATS = {
+  totalMeetings: 0,
+  totalProjects: 0,
+  totalActions: 0,
+  totalDecisions: 0,
+  averageSentiment: null,
+  sentimentLabel: 'Unscored',
+}
 
 function StatCard({ label, value, sub, loading }) {
   if (loading) return (
@@ -53,9 +62,14 @@ function MeetingCard({ meeting, deletingId, onDelete }) {
       className="bg-white border border-gray-200 rounded-xl p-5 cursor-pointer hover:shadow-md hover:border-indigo-300 transition group"
     >
       <div className="flex items-start justify-between mb-3">
-        <h3 className="font-medium text-gray-900 group-hover:text-indigo-600 transition truncate">
-          {meeting.title}
-        </h3>
+        <div className="min-w-0">
+          <h3 className="font-medium text-gray-900 group-hover:text-indigo-600 transition truncate">
+            {meeting.title}
+          </h3>
+          {meeting.project_name && (
+            <p className="text-xs text-gray-400 mt-1 truncate">{meeting.project_name}</p>
+          )}
+        </div>
         <div className="ml-2 flex items-center gap-2 shrink-0">
           <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">
             {meeting.file_name.split('.').pop().toUpperCase()}
@@ -67,18 +81,25 @@ function MeetingCard({ meeting, deletingId, onDelete }) {
             className="text-xs text-gray-400 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
             aria-label={`Delete ${meeting.title}`}
           >
-            {isDeleting ? 'Removing...' : '✕'}
+            {isDeleting ? 'Removing...' : 'x'}
           </button>
         </div>
       </div>
       <div className="flex gap-4 text-xs text-gray-400">
         <span>{meeting.word_count.toLocaleString()} words</span>
         <span>{meeting.speaker_count} speakers</span>
-        <span>{new Date(meeting.created_at).toLocaleDateString()}</span>
+        <span>{new Date(meeting.meeting_date || meeting.created_at).toLocaleDateString()}</span>
+      </div>
+      <div className="mt-2 flex gap-2 flex-wrap">
+        {meeting.meeting_type && (
+          <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full capitalize">
+            {meeting.meeting_type}
+          </span>
+        )}
       </div>
       <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
         <span className="text-xs text-gray-400">Click to analyse</span>
-        <span className="text-xs text-indigo-400 group-hover:translate-x-1 transition-transform">→</span>
+        <span className="text-xs text-indigo-400 group-hover:translate-x-1 transition-transform">-&gt;</span>
       </div>
     </div>
   )
@@ -90,12 +111,34 @@ export default function Dashboard() {
   const [showUpload, setShowUpload] = useState(false)
   const [search, setSearch] = useState('')
   const [deletingId, setDeletingId] = useState(null)
+  const [filtered, setFiltered] = useState([])
+  const [dashboardStats, setDashboardStats] = useState(DEFAULT_DASHBOARD_STATS)
+
+  const loadDashboardStats = async () => {
+    try {
+      const res = await getDashboardStats()
+      setDashboardStats({
+        totalMeetings: res.data.total_meetings,
+        totalProjects: res.data.total_projects,
+        totalActions: res.data.total_actions,
+        totalDecisions: res.data.total_decisions,
+        averageSentiment: res.data.average_sentiment,
+        sentimentLabel: res.data.sentiment_label,
+      })
+    } catch (error) {
+      console.error(error)
+      setDashboardStats(DEFAULT_DASHBOARD_STATS)
+    }
+  }
 
   const fetchMeetings = async () => {
     setLoading(true)
     try {
-      const res = await getMeetings()
-      setMeetings(res.data)
+      const [meetingsRes] = await Promise.all([
+        getMeetings(),
+        loadDashboardStats(),
+      ])
+      setMeetings(meetingsRes.data)
     } catch (err) {
       console.error(err)
     } finally {
@@ -104,23 +147,26 @@ export default function Dashboard() {
   }
 
   useEffect(() => { fetchMeetings() }, [])
-
-  const totalWords = meetings.reduce((sum, m) => sum + m.word_count, 0)
-  const [filtered, setFiltered] = useState([])
-
   useEffect(() => { setFiltered(meetings) }, [meetings])
 
-  const handleSearch = async (val) => {
-    setSearch(val)
-    if (val.trim() === '') {
+  const handleSearch = async (value) => {
+    setSearch(value)
+    if (value.trim() === '') {
       setFiltered(meetings)
       return
     }
+
     try {
-      const res = await searchMeetings(val)
+      const res = await searchMeetings(value)
       setFiltered(res.data)
     } catch {
-      setFiltered(meetings.filter(m => m.title.toLowerCase().includes(val.toLowerCase())))
+      setFiltered(
+        meetings.filter(meeting =>
+          `${meeting.title} ${meeting.project_name || ''} ${meeting.meeting_type || ''}`
+            .toLowerCase()
+            .includes(value.toLowerCase())
+        )
+      )
     }
   }
 
@@ -130,6 +176,7 @@ export default function Dashboard() {
       await deleteMeeting(meeting.id)
       setMeetings(current => current.filter(item => item.id !== meeting.id))
       setFiltered(current => current.filter(item => item.id !== meeting.id))
+      await loadDashboardStats()
     } catch (err) {
       console.error(err)
       window.alert('Could not delete this meeting. Please try again.')
@@ -140,7 +187,6 @@ export default function Dashboard() {
 
   return (
     <div>
-      {/* Page header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Dashboard</h2>
@@ -154,27 +200,30 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Total meetings" value={meetings.length} sub="transcripts uploaded" loading={loading} />
-        <StatCard label="Total words" value={totalWords.toLocaleString()} sub="across all meetings" loading={loading} />
-        <StatCard label="Avg words" value={meetings.length ? Math.round(totalWords / meetings.length).toLocaleString() : 0} sub="per meeting" loading={loading} />
-        <StatCard label="Speakers detected" value={meetings.reduce((s, m) => s + m.speaker_count, 0)} sub="across all meetings" loading={loading} />
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <StatCard label="Total meetings" value={dashboardStats.totalMeetings} sub="transcripts uploaded" loading={loading} />
+        <StatCard label="Projects" value={dashboardStats.totalProjects} sub="active workstreams" loading={loading} />
+        <StatCard label="Action items" value={dashboardStats.totalActions} sub="extracted tasks" loading={loading} />
+        <StatCard label="Decisions" value={dashboardStats.totalDecisions} sub="captured agreements" loading={loading} />
+        <StatCard
+          label="Avg sentiment"
+          value={dashboardStats.averageSentiment !== null ? dashboardStats.averageSentiment.toFixed(2) : '-'}
+          sub={dashboardStats.sentimentLabel}
+          loading={loading}
+        />
       </div>
 
-      {/* Upload zone */}
       {showUpload && (
         <div className="mb-6">
           <UploadZone onUploadSuccess={() => { setShowUpload(false); fetchMeetings() }} />
         </div>
       )}
 
-      {/* Search */}
       {meetings.length > 0 && (
         <div className="mb-4">
           <input
             type="text"
-            placeholder="Search meetings..."
+            placeholder="Search meetings, projects, or meeting types..."
             value={search}
             onChange={e => handleSearch(e.target.value)}
             className="w-full max-w-sm border border-gray-200 rounded-lg px-4 py-2 text-sm outline-none focus:border-indigo-400 transition"
@@ -182,7 +231,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Meetings grid */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map(i => <MeetingCardSkeleton key={i} />)}
@@ -191,16 +239,16 @@ export default function Dashboard() {
         <p className="text-gray-400 text-sm">No meetings match "{search}"</p>
       ) : filtered.length === 0 ? (
         <div className="border-2 border-dashed border-gray-200 rounded-xl p-16 text-center">
-          <div className="text-4xl mb-4">🎙️</div>
+          <div className="text-4xl mb-4">Records</div>
           <h3 className="text-gray-600 font-medium mb-2">No meetings yet</h3>
           <p className="text-gray-400 text-sm">Click "Upload Transcript" to get started</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map(m => (
+          {filtered.map(meeting => (
             <MeetingCard
-              key={m.id}
-              meeting={m}
+              key={meeting.id}
+              meeting={meeting}
               deletingId={deletingId}
               onDelete={handleDeleteMeeting}
             />
